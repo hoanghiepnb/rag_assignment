@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "../styles/Chat.css";
 
 const ChatInterface = () => {
@@ -6,7 +6,15 @@ const ChatInterface = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const messagesEndRef = useRef(null);
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Bug: Missing loading state
 
@@ -63,35 +71,49 @@ const ChatInterface = () => {
   return (
     <div className="chat-container">
       <div className="messages">
-        {messages.map((msg, index) => (
-          <div key={index} className={`message ${msg.isUser ? "user" : "bot"}`}>
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`message ${msg.isUser ? "user" : "bot"}`}>
             {msg.isUser ? (
-              msg.text
+              <div className="bubble user-bubble">{msg.text}</div>
             ) : (
-              // Bug: Poor information display
-              <div>
-                <strong>{msg.text}</strong>
-                <div><em>Confidence:</em> {msg.confidence}</div>
-                <div><em>Reason:</em> {msg.reasoning}</div>
-                <div><em>Tips:</em> {msg.fitTips}</div>
+              <div className="bubble bot-bubble">
+                <div><strong>{msg.text}</strong></div>
+                {msg.confidence !== undefined && (
+                  <div><em>Confidence:</em> {msg.confidence}</div>
+                )}
+                {msg.reasoning && (
+                  <div><em>Reason:</em> {msg.reasoning}</div>
+                )}
+                {msg.fitTips && (
+                  <div><em>Tip:</em> {msg.fitTips}</div>
+                )}
                 {msg.issues?.length > 0 && (
-                  <div><em>Identified Issues:</em> {msg.issues.join(", ")}</div>
+                  <div><em>Issues:</em> {msg.issues.join(", ")}</div>
                 )}
               </div>
             )}
           </div>
         ))}
-        {isLoading && <div className="message bot">Loading recommendation...</div>}
+
+        {isLoading && (
+          <div className="message bot">
+            <div className="bubble bot-bubble loading">Loading...</div>
+          </div>
+        )}
         {error && <div className="error">{error}</div>}
+        <div ref={messagesEndRef} />
       </div>
+
       <form onSubmit={handleSubmit} className="input-form">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Enter your measurements and fit issues..."
+          placeholder="Describe your measurements or fit issues..."
         />
-        <button type="submit">Get Recommendation</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Sending..." : "Send"}
+        </button>
       </form>
     </div>
   );

@@ -21,12 +21,17 @@ recommender = BraFittingRAG()
 
 @app.post("/api/bra-fitting")
 async def get_fitting_recommendation(query: Query):
+    text = query.text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Input text is empty. Please describe your measurements or issues.")
+
     try:
-        # Bug: No input validation
-        result = recommender.get_recommendation(query.text)
+        result = recommender.get_recommendation(text)
         return result
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        # Bug: Generic error handling
+        logger.error(f"[BraFittingRAG] Internal error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/health")

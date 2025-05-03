@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from .recommender import BraFittingRAG
+from .recommender_v2 import BraFittingRAG
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -31,7 +31,7 @@ async def get_fitting_recommendation(query: Query):
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        logger.error(f"[BraFittingRAG] Internal error: {e}")
+        print(f"[BraFittingRAG] Internal error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/health")
